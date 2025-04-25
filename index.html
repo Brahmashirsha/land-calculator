@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Land Share Calculator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .calculator {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .results {
+            margin-top: 30px;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .result-label {
+            font-weight: 600;
+        }
+        .conversion-info {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #7f8c8d;
+            text-align: center;
+        }
+        .highlight {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <h1>Land Share Calculator</h1>
+    <div class="calculator">
+        <div class="form-group">
+            <label for="share">Your Share (e.g. 5/14)</label>
+            <input type="text" id="share" placeholder="Enter your share as fraction">
+        </div>
+        
+        <div class="form-group">
+            <label>Total Land</label>
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <input type="number" id="kanal" placeholder="Kanal">
+                </div>
+                <div style="flex: 1;">
+                    <input type="number" id="marla" placeholder="Marla" max="19">
+                </div>
+            </div>
+        </div>
+        
+        <button onclick="calculate()">Calculate Share</button>
+        
+        <div class="results" id="results" style="display: none;">
+            <h3>Your Share Results</h3>
+            
+            <div class="result-item">
+                <span class="result-label">In Kanal:</span>
+                <span id="result-kanal">0</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">In Marla:</span>
+                <span id="result-marla">0</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">In Bigha:</span>
+                <span id="result-bigha">0</span>
+            </div>
+            
+            <div class="highlight">
+                Total Share: <span id="result-combined">0 Kanal 0 Marla</span>
+            </div>
+        </div>
+        
+        <div class="conversion-info">
+            <p>Conversions: 1 Kanal = 20 Marla | 4 Kanal = 1 Bigha</p>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            // Get input values
+            const shareInput = document.getElementById('share').value;
+            const kanal = parseFloat(document.getElementById('kanal').value) || 0;
+            const marla = parseFloat(document.getElementById('marla').value) || 0;
+            
+            // Validate share input
+            if (!shareInput.includes('/')) {
+                alert('Please enter your share as a fraction (e.g. 5/14)');
+                return;
+            }
+            
+            // Calculate total land in decimal Kanal
+            const totalLand = kanal + (marla / 20);
+            
+            // Parse share fraction
+            const parts = shareInput.split('/');
+            const numerator = parseFloat(parts[0]);
+            const denominator = parseFloat(parts[1]);
+            
+            // Calculate share in Kanal
+            const shareKanal = (numerator / denominator) * totalLand;
+            
+            // Calculate other units
+            const shareMarla = shareKanal * 20;
+            const shareBigha = shareKanal / 4;
+            
+            // Get whole and fractional parts
+            const wholeKanal = Math.floor(shareKanal);
+            const fractionalMarla = Math.round((shareKanal - wholeKanal) * 20);
+            
+            // Display results
+            document.getElementById('result-kanal').textContent = shareKanal.toFixed(4);
+            document.getElementById('result-marla').textContent = shareMarla.toFixed(2);
+            document.getElementById('result-bigha').textContent = shareBigha.toFixed(4);
+            document.getElementById('result-combined').textContent = 
+                `${wholeKanal} Kanal ${fractionalMarla} Marla`;
+            
+            // Show results
+            document.getElementById('results').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
