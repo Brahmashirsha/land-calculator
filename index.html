@@ -41,6 +41,17 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 16px;
+            box-sizing: border-box;
+        }
+        .unit-selector {
+            margin-bottom: 15px;
+        }
+        .input-fields {
+            display: flex;
+            gap: 10px;
+        }
+        .input-fields > div {
+            flex: 1;
         }
         button {
             background-color: #3498db;
@@ -52,6 +63,7 @@
             font-size: 16px;
             width: 100%;
             transition: background-color 0.3s;
+            margin-top: 10px;
         }
         button:hover {
             background-color: #2980b9;
@@ -101,12 +113,20 @@
         </div>
         
         <div class="form-group">
-            <label>Total Land</label>
-            <div style="display: flex; gap: 10px;">
-                <div style="flex: 1;">
+            <label for="unit-type">Land Unit</label>
+            <select id="unit-type" class="unit-selector" onchange="updateInputFields()">
+                <option value="kanal">Kanal & Marla</option>
+                <option value="bigha">Bigha</option>
+            </select>
+            
+            <div class="input-fields" id="input-fields-container">
+                <!-- Dynamic fields will appear here -->
+                <div>
+                    <label for="kanal">Kanal</label>
                     <input type="number" id="kanal" placeholder="Kanal">
                 </div>
-                <div style="flex: 1;">
+                <div>
+                    <label for="marla">Marla</label>
                     <input type="number" id="marla" placeholder="Marla" max="19">
                 </div>
             </div>
@@ -138,16 +158,44 @@
         </div>
         
         <div class="conversion-info">
-            <p>Conversions: 1 Kanal = 20 Marla | 4 Kanal = 1 Bigha</p>
+            <p>Conversions: 1 Kanal = 20 Marla | 1 Bigha = 4 Kanal = 80 Marla</p>
         </div>
     </div>
 
     <script>
+        function updateInputFields() {
+            const unitType = document.getElementById('unit-type').value;
+            const container = document.getElementById('input-fields-container');
+            
+            container.innerHTML = ''; // Clear existing fields
+            
+            if (unitType === 'kanal') {
+                // Create Kanal and Marla inputs
+                container.innerHTML = `
+                    <div>
+                        <label for="kanal">Kanal</label>
+                        <input type="number" id="kanal" placeholder="Kanal">
+                    </div>
+                    <div>
+                        <label for="marla">Marla</label>
+                        <input type="number" id="marla" placeholder="Marla" max="19">
+                    </div>
+                `;
+            } else if (unitType === 'bigha') {
+                // Create single Bigha input
+                container.innerHTML = `
+                    <div>
+                        <label for="bigha">Bigha</label>
+                        <input type="number" id="bigha" placeholder="Bigha">
+                    </div>
+                `;
+            }
+        }
+
         function calculate() {
             // Get input values
             const shareInput = document.getElementById('share').value;
-            const kanal = parseFloat(document.getElementById('kanal').value) || 0;
-            const marla = parseFloat(document.getElementById('marla').value) || 0;
+            const unitType = document.getElementById('unit-type').value;
             
             // Validate share input
             if (!shareInput.includes('/')) {
@@ -155,31 +203,55 @@
                 return;
             }
             
-            // Calculate total land in decimal Kanal
-            const totalLand = kanal + (marla / 20);
+            let totalKanal;
+            
+            if (unitType === 'kanal') {
+                const kanal = parseFloat(document.getElementById('kanal').value) || 0;
+                const marla = parseFloat(document.getElementById('marla').value) || 0;
+                totalKanal = kanal + (marla / 20);
+            } else {
+                const bigha = parseFloat(document.getElementById('bigha').value) || 0;
+                totalKanal = bigha * 4; // 1 Bigha = 4 Kanal
+            }
             
             // Parse share fraction
             const parts = shareInput.split('/');
             const numerator = parseFloat(parts[0]);
             const denominator = parseFloat(parts[1]);
             
+            if (isNaN(numerator) || isNaN(denominator) || denominator === 0) {
+                alert('Please enter a valid fraction (e.g. 5/14)');
+                return;
+            }
+            
             // Calculate share in Kanal
-            const shareKanal = (numerator / denominator) * totalLand;
+            const shareKanal = (numerator / denominator) * totalKanal;
             
             // Calculate other units
             const shareMarla = shareKanal * 20;
             const shareBigha = shareKanal / 4;
             
-            // Get whole and fractional parts
+            // Get whole and fractional parts for display
             const wholeKanal = Math.floor(shareKanal);
-            const fractionalMarla = Math.round((shareKanal - wholeKanal) * 20);
+            const remainingMarla = Math.round((shareKanal - wholeKanal) * 20);
+            
+            const wholeBigha = Math.floor(shareBigha);
+            const remainingKanalFromBigha = Math.floor((shareBigha - wholeBigha) * 4);
+            const remainingMarlaFromBigha = Math.round((((shareBigha - wholeBigha) * 4) - remainingKanalFromBigha) * 20);
             
             // Display results
             document.getElementById('result-kanal').textContent = shareKanal.toFixed(4);
             document.getElementById('result-marla').textContent = shareMarla.toFixed(2);
             document.getElementById('result-bigha').textContent = shareBigha.toFixed(4);
-            document.getElementById('result-combined').textContent = 
-                `${wholeKanal} Kanal ${fractionalMarla} Marla`;
+            
+            // Display combined result based on which unit was input
+            if (unitType === 'kanal') {
+                document.getElementById('result-combined').textContent = 
+                    `${wholeKanal} Kanal ${remainingMarla} Marla`;
+            } else {
+                document.getElementById('result-combined').textContent = 
+                    `${wholeBigha} Bigha ${remainingKanalFromBigha} Kanal ${remainingMarlaFromBigha} Marla`;
+            }
             
             // Show results
             document.getElementById('results').style.display = 'block';
