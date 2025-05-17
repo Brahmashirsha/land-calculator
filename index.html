@@ -105,22 +105,22 @@
     </style>
 </head>
 <body>
-    <h1>Land Share Calculator</h1>
+    <h1>Land Share Calculator By Ravi Chaudhary</h1>
     <div class="calculator">
         <div class="form-group">
-            <label for="share">Your Share (e.g. 5/14)</label>
+            <label for="share">Your Share (e.g. 181/240)</label>
             <input type="text" id="share" placeholder="Enter your share as fraction">
         </div>
-        
+
         <div class="form-group">
             <label for="unit-type">Land Unit</label>
             <select id="unit-type" class="unit-selector" onchange="updateInputFields()">
                 <option value="kanal">Kanal & Marla</option>
                 <option value="bigha">Bigha</option>
+                <option value="bigha-biswa">Bigha & Biswa</option>
             </select>
-            
+
             <div class="input-fields" id="input-fields-container">
-                <!-- Dynamic fields will appear here -->
                 <div>
                     <label for="kanal">Kanal</label>
                     <input type="number" id="kanal" placeholder="Kanal">
@@ -131,34 +131,39 @@
                 </div>
             </div>
         </div>
-        
+
         <button onclick="calculate()">Calculate Share</button>
-        
+
         <div class="results" id="results" style="display: none;">
             <h3>Your Share Results</h3>
-            
+
             <div class="result-item">
                 <span class="result-label">In Kanal:</span>
                 <span id="result-kanal">0</span>
             </div>
-            
+
             <div class="result-item">
                 <span class="result-label">In Marla:</span>
                 <span id="result-marla">0</span>
             </div>
-            
+
             <div class="result-item">
                 <span class="result-label">In Bigha:</span>
                 <span id="result-bigha">0</span>
             </div>
-            
+
+            <div class="result-item">
+                <span class="result-label">In Bigha & Biswa:</span>
+                <span id="result-bigha-biswa">0</span>
+            </div>
+
             <div class="highlight">
                 Total Share: <span id="result-combined">0 Kanal 0 Marla</span>
             </div>
         </div>
-        
+
         <div class="conversion-info">
-            <p>Conversions: 1 Kanal = 20 Marla | 1 Bigha = 4 Kanal = 80 Marla</p>
+            <p>Conversions: 1 Kanal = 20 Marla | 1 Bigha = 4 Kanal = 80 Marla | 1 Bigha = 20 Biswa</p>
         </div>
     </div>
 
@@ -166,11 +171,9 @@
         function updateInputFields() {
             const unitType = document.getElementById('unit-type').value;
             const container = document.getElementById('input-fields-container');
-            
-            container.innerHTML = ''; // Clear existing fields
-            
+            container.innerHTML = '';
+
             if (unitType === 'kanal') {
-                // Create Kanal and Marla inputs
                 container.innerHTML = `
                     <div>
                         <label for="kanal">Kanal</label>
@@ -182,80 +185,86 @@
                     </div>
                 `;
             } else if (unitType === 'bigha') {
-                // Create single Bigha input
                 container.innerHTML = `
                     <div>
                         <label for="bigha">Bigha</label>
                         <input type="number" id="bigha" placeholder="Bigha">
                     </div>
                 `;
+            } else if (unitType === 'bigha-biswa') {
+                container.innerHTML = `
+                    <div>
+                        <label for="bigha">Bigha</label>
+                        <input type="number" id="bigha" placeholder="Bigha">
+                    </div>
+                    <div>
+                        <label for="biswa">Biswa</label>
+                        <input type="number" id="biswa" placeholder="Biswa" max="19">
+                    </div>
+                `;
             }
         }
 
         function calculate() {
-            // Get input values
             const shareInput = document.getElementById('share').value;
             const unitType = document.getElementById('unit-type').value;
-            
-            // Validate share input
+
             if (!shareInput.includes('/')) {
-                alert('Please enter your share as a fraction (e.g. 5/14)');
+                alert('Please enter your share as a fraction (e.g. 181/240)');
                 return;
             }
-            
-            let totalKanal;
-            
+
+            const parts = shareInput.split('/');
+            const numerator = parseFloat(parts[0]);
+            const denominator = parseFloat(parts[1]);
+
+            if (isNaN(numerator) || isNaN(denominator) || denominator === 0) {
+                alert('Please enter a valid fraction (e.g. 181/240)');
+                return;
+            }
+
+            let totalKanal = 0;
+
             if (unitType === 'kanal') {
                 const kanal = parseFloat(document.getElementById('kanal').value) || 0;
                 const marla = parseFloat(document.getElementById('marla').value) || 0;
                 totalKanal = kanal + (marla / 20);
-            } else {
+            } else if (unitType === 'bigha') {
                 const bigha = parseFloat(document.getElementById('bigha').value) || 0;
-                totalKanal = bigha * 4; // 1 Bigha = 4 Kanal
+                totalKanal = bigha * 4;
+            } else if (unitType === 'bigha-biswa') {
+                const bigha = parseFloat(document.getElementById('bigha').value) || 0;
+                const biswa = parseFloat(document.getElementById('biswa').value) || 0;
+                totalKanal = (bigha * 4) + (biswa * 0.2); // 1 Biswa = 0.2 Kanal
             }
-            
-            // Parse share fraction
-            const parts = shareInput.split('/');
-            const numerator = parseFloat(parts[0]);
-            const denominator = parseFloat(parts[1]);
-            
-            if (isNaN(numerator) || isNaN(denominator) || denominator === 0) {
-                alert('Please enter a valid fraction (e.g. 5/14)');
-                return;
-            }
-            
-            // Calculate share in Kanal
+
             const shareKanal = (numerator / denominator) * totalKanal;
-            
-            // Calculate other units
             const shareMarla = shareKanal * 20;
             const shareBigha = shareKanal / 4;
-            
-            // Get whole and fractional parts for display
+
             const wholeKanal = Math.floor(shareKanal);
             const remainingMarla = Math.round((shareKanal - wholeKanal) * 20);
-            
+
             const wholeBigha = Math.floor(shareBigha);
-            const remainingKanalFromBigha = Math.floor((shareBigha - wholeBigha) * 4);
-            const remainingMarlaFromBigha = Math.round((((shareBigha - wholeBigha) * 4) - remainingKanalFromBigha) * 20);
-            
-            // Display results
+            const biswaPart = Math.round((shareBigha - wholeBigha) * 20);
+
+            // Update display
             document.getElementById('result-kanal').textContent = shareKanal.toFixed(4);
             document.getElementById('result-marla').textContent = shareMarla.toFixed(2);
             document.getElementById('result-bigha').textContent = shareBigha.toFixed(4);
-            
-            // Display combined result based on which unit was input
+            document.getElementById('result-bigha-biswa').textContent = `${wholeBigha} Bigha ${biswaPart} Biswa`;
+
             if (unitType === 'kanal') {
-                document.getElementById('result-combined').textContent = 
-                    `${wholeKanal} Kanal ${remainingMarla} Marla`;
+                document.getElementById('result-combined').textContent = `${wholeKanal} Kanal ${remainingMarla} Marla`;
             } else {
-                document.getElementById('result-combined').textContent = 
-                    `${wholeBigha} Bigha ${remainingKanalFromBigha} Kanal ${remainingMarlaFromBigha} Marla`;
+                document.getElementById('result-combined').textContent = `${wholeBigha} Bigha ${biswaPart} Biswa`;
             }
-            
-            // Show results
+
             document.getElementById('results').style.display = 'block';
         }
+
+        // Initialize on load
+        window.onload = updateInputFields;
     </script>
 </body>
 </html>
